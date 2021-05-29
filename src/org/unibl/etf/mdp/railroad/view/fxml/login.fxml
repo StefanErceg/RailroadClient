@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: #5e89e6;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <HBox alignment="CENTER" layoutX="286.0" layoutY="50.0" spacing="15.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="50.0">
+         <children>
+            <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+               <HBox.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </HBox.margin>
+               <image>
+                  <Image url="@../../../../../../../../assets/icons/train.png" />
+               </image>
+            </ImageView>
+            <Label layoutX="286.0" layoutY="49.0" text="Railroad" textAlignment="CENTER" textFill="#000000cc" AnchorPane.topAnchor="50.0">
+               <font>
+                  <Font name="Monospaced Bold" size="18.0" />
+               </font>
+            </Label>
+         </children>
+      </HBox>
+      <GridPane layoutX="200.0" layoutY="155.0" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="150.0">
+        <columnConstraints>
+          <ColumnConstraints halignment="LEFT" hgrow="SOMETIMES" maxWidth="300.0" minWidth="10.0" prefWidth="150.0" />
+          <ColumnConstraints hgrow="SOMETIMES" maxWidth="300.0" minWidth="10.0" prefWidth="150.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="10.0" prefHeight="40.0" valignment="CENTER" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="40.0" valignment="CENTER" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <Label text="Username" textAlignment="CENTER" textFill="#000000cb">
+               <font>
+                  <Font name="Monospaced Regular" size="16.0" />
+               </font>
+            </Label>
+            <Label text="Password" textFill="#000000cb" GridPane.rowIndex="1">
+               <font>
+                  <Font name="Monospaced Regular" size="16.0" />
+               </font>
+            </Label>
+            <TextField prefHeight="25.0" prefWidth="150.0" GridPane.columnIndex="1">
+               <font>
+                  <Font name="Monospaced Regular" size="14.0" />
+               </font></TextField>
+            <PasswordField GridPane.columnIndex="1" GridPane.rowIndex="1">
+               <font>
+                  <Font size="14.0" />
+               </font></PasswordField>
+         </children>
+      </GridPane>
+      <Button layoutX="274.0" layoutY="305.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="75.0" text="Log in" textAlignment="CENTER" textFill="#000000cb" AnchorPane.bottomAnchor="80.0">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Button>
+   </children>
+</AnchorPane>
