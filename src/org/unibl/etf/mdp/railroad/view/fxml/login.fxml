@@ -7,7 +7,7 @@
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: #5e89e6;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: #5e89e6;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.unibl.etf.mdp.railroad.controller.LoginController">
    <children>
       <HBox alignment="CENTER" layoutX="286.0" layoutY="50.0" spacing="15.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="50.0">
          <children>
@@ -32,8 +32,8 @@
           <ColumnConstraints hgrow="SOMETIMES" maxWidth="300.0" minWidth="10.0" prefWidth="150.0" />
         </columnConstraints>
         <rowConstraints>
-          <RowConstraints minHeight="10.0" prefHeight="40.0" valignment="CENTER" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="40.0" valignment="CENTER" vgrow="SOMETIMES" />
+          <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="40.0" valignment="CENTER" vgrow="SOMETIMES" />
+          <RowConstraints maxHeight="-Infinity" minHeight="10.0" prefHeight="40.0" valignment="CENTER" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
             <Label text="Username" textAlignment="CENTER" textFill="#000000cb">
@@ -46,17 +46,17 @@
                   <Font name="Monospaced Regular" size="16.0" />
                </font>
             </Label>
-            <TextField prefHeight="25.0" prefWidth="150.0" GridPane.columnIndex="1">
+            <TextField fx:id="usernameTextField" prefHeight="30.0" GridPane.columnIndex="1" GridPane.hgrow="NEVER" GridPane.vgrow="NEVER">
                <font>
                   <Font name="Monospaced Regular" size="14.0" />
                </font></TextField>
-            <PasswordField GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <PasswordField fx:id="passwordField" maxHeight="-Infinity" prefHeight="30.0" GridPane.columnIndex="1" GridPane.hgrow="NEVER" GridPane.rowIndex="1" GridPane.vgrow="NEVER">
                <font>
                   <Font size="14.0" />
                </font></PasswordField>
          </children>
       </GridPane>
-      <Button layoutX="274.0" layoutY="305.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="75.0" text="Log in" textAlignment="CENTER" textFill="#000000cb" AnchorPane.bottomAnchor="80.0">
+      <Button fx:id="loginButton" layoutX="274.0" layoutY="305.0" mnemonicParsing="false" onAction="#login" prefHeight="25.0" prefWidth="75.0" text="Log in" textAlignment="CENTER" textFill="#000000cb" AnchorPane.bottomAnchor="80.0">
          <font>
             <Font size="14.0" />
          </font>
