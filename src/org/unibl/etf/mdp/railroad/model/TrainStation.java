@@ -81,7 +81,7 @@ public class TrainStation implements Serializable {
 
 	@Override
 	public String toString() {
-		return "TrainStation [id=" + id + ", name=" + name + ", city=" + city + "]";
+		return name + " - " + city.getName() + ", " + city.getCountry().getShortName();
 	}
 	
 

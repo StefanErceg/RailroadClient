@@ -1,6 +1,8 @@
 package org.unibl.etf.mdp.railroad.model;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
@@ -13,22 +15,22 @@ public class TrainLine implements Serializable {
 	private String id;
 	private TrainStation start;
 	private TrainStation destination;
-	private Date startTime;
-	private Date arrivalTime;
+	private String startTime;
+	private String arrivalTime;
 	private ArrayList<TrainStop> stops;
 	
-	public TrainLine(String id, TrainStation start, TrainStation destination, Date startTime, Date arrivalTime,
+	public TrainLine(String id, TrainStation start, TrainStation destination, String startTime, String arrivalTime,
 			ArrayList<TrainStop> stops) {
 		super();
 		this.id = id;
 		this.start = start;
 		this.destination = destination;
-		this.startTime = startTime;
-		this.arrivalTime = arrivalTime;
+		this.startTime =startTime;
+		this.arrivalTime =arrivalTime;
 		this.stops = stops;
 	}
 
-	public TrainLine(TrainStation start, TrainStation destination, Date startTime, Date arrivalTime,
+	public TrainLine(TrainStation start, TrainStation destination, String startTime, String arrivalTime,
 			ArrayList<TrainStop> stops) {
 		super();
 		this.id = UUID.randomUUID().toString();
@@ -70,28 +72,28 @@ public class TrainLine implements Serializable {
 	/**
 	 * @return the startTime
 	 */
-	public Date getStartTime() {
+	public String getStartTime() {
 		return startTime;
 	}
 
 	/**
 	 * @param startTime the startTime to set
 	 */
-	public void setStartTime(Date startTime) {
-		this.startTime = startTime;
+	public void setStartTime(String startTime) {
+		this.startTime =  startTime;
 	}
 
 	/**
 	 * @return the arrivalTime
 	 */
-	public Date getArrivalTime() {
+	public String getArrivalTime() {
 		return arrivalTime;
 	}
 
 	/**
 	 * @param arrivalTime the arrivalTime to set
 	 */
-	public void setArrivalTime(Date arrivalTime) {
+	public void setArrivalTime(String arrivalTime) {
 		this.arrivalTime = arrivalTime;
 	}
 

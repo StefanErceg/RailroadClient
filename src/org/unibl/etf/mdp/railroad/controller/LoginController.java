@@ -1,8 +1,7 @@
 package org.unibl.etf.mdp.railroad.controller;
 
 import org.unibl.etf.mdp.railroad.model.User;
-import org.unibl.etf.mdp.railroad.rest.TrainStations;
-import org.unibl.etf.mdp.railroad.soap.Client;
+import org.unibl.etf.mdp.railroad.soap.ClientSOAP;
 import org.unibl.etf.mdp.railroad.view.Dashboard;
 
 import javafx.fxml.FXML;
@@ -24,16 +23,13 @@ public class LoginController {
 
 	public void initialize(Stage stage) {
 		this.stage = stage;
-		TrainStations.getTrainStations().forEach((trainStation) -> {
-			System.out.println(trainStation);
-		});
 	}
 	
 	public void login() {
 		String username = usernameTextField.getText();
 		String password = usernameTextField.getText();
 		if ("".equals(username) || "".equals(password)) return;
-		User user = Client.login(username, password);
+		User user = ClientSOAP.login(username, password);
 		if (user != null) {
 			new Dashboard().display(user);
 			stage.close();

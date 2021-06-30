@@ -8,7 +8,7 @@ import javax.xml.rpc.ServiceException;
 
 import org.unibl.etf.mdp.railroad.model.User;
 
-public class Client {
+public class ClientSOAP {
 	
 	public static User login(String username, String password) {
 		AuthServiceLocator locator = new AuthServiceLocator();
