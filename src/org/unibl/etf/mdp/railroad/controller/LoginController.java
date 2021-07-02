@@ -2,6 +2,7 @@ package org.unibl.etf.mdp.railroad.controller;
 
 import org.unibl.etf.mdp.railroad.model.User;
 import org.unibl.etf.mdp.railroad.soap.ClientSOAP;
+import org.unibl.etf.mdp.railroad.view.Alert;
 import org.unibl.etf.mdp.railroad.view.Dashboard;
 
 import javafx.fxml.FXML;
@@ -33,7 +34,7 @@ public class LoginController {
 		if (user != null) {
 			new Dashboard().display(user);
 			stage.close();
-		}
+		} else new Alert().display("Wrong username or password!");
 	}
 
 }

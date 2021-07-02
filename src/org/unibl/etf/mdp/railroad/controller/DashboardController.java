@@ -13,9 +13,12 @@ import java.util.stream.Collectors;
 import org.unibl.etf.mdp.railroad.archive.ArchiveInterface;
 import org.unibl.etf.mdp.railroad.model.TrainStation;
 import org.unibl.etf.mdp.railroad.model.User;
+import org.unibl.etf.mdp.railroad.notifications.Notification;
 import org.unibl.etf.mdp.railroad.rest.TrainStations;
 import org.unibl.etf.mdp.railroad.soap.ClientSOAP;
+import org.unibl.etf.mdp.railroad.view.Alert;
 import org.unibl.etf.mdp.railroad.view.Login;
+import org.unibl.etf.mdp.railroad.view.SendNotification;
 import org.unibl.etf.mdp.railroad.view.TrainLines;
 
 import javafx.event.ActionEvent;
@@ -75,6 +78,7 @@ public class DashboardController {
 			}
 		});
 		generateUsers();
+		Notification.initialize(user.getUsername());
 		System.setProperty("java.security.policy", DIRECTORY + File.separator + "policy" + File.separator + "client_policyfile.txt");
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new SecurityManager());
@@ -109,6 +113,10 @@ public class DashboardController {
 		new TrainLines().display(user.getLocationId());
 	}
 	
+	public void sendNotification() {
+		new SendNotification().display(user);
+	}
+	
 	public void archiveReport() {
 		FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle("Select PDF report");
@@ -118,6 +126,7 @@ public class DashboardController {
 			byte[] data = Files.readAllBytes(selected.toPath());
 			String name = selected.getName();
 			archive.upload(data, name, user.getUsername());
+			new Alert().display("Report successfully archived!");
 		} catch (IOException e) {
 			e.printStackTrace();
 			return;
