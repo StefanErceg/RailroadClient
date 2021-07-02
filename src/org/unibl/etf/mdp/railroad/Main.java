@@ -1,12 +1,13 @@
 package org.unibl.etf.mdp.railroad;
 
-import org.unibl.etf.mdp.railroad.rest.TrainLines;
 import org.unibl.etf.mdp.railroad.view.Login;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
 
 public class Main extends Application {
+	
+
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
@@ -21,6 +22,7 @@ public class Main extends Application {
     public static void main(String[] args) {
         try {
             launch(args);
+            
 
         } catch (Exception ex) {
            System.out.println(ex.getMessage());

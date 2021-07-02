@@ -1,8 +1,16 @@
 package org.unibl.etf.mdp.railroad.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import org.unibl.etf.mdp.railroad.archive.ArchiveInterface;
 import org.unibl.etf.mdp.railroad.model.TrainStation;
 import org.unibl.etf.mdp.railroad.model.User;
 import org.unibl.etf.mdp.railroad.rest.TrainStations;
@@ -23,9 +31,13 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 
 public class DashboardController {
+	
+	public static final String DIRECTORY =  System.getProperty("user.home") + File.separator + "Railroad" + File.separator + "Archive";
 
 	private Stage stage;
 	private User user;
@@ -42,6 +54,8 @@ public class DashboardController {
 	private Label stationID;
 	@FXML
 	private VBox usersWrap;
+	
+	private ArchiveInterface archive;
 	
 	public void initialize(Stage stage, User user) {
 		this.stage = stage;
@@ -61,6 +75,20 @@ public class DashboardController {
 			}
 		});
 		generateUsers();
+		System.setProperty("java.security.policy", DIRECTORY + File.separator + "policy" + File.separator + "client_policyfile.txt");
+		if (System.getSecurityManager() == null) {
+			System.setSecurityManager(new SecurityManager());
+		}
+		Registry registry;
+		try {
+			registry = LocateRegistry.getRegistry(1099);
+			archive = (ArchiveInterface) registry.lookup("Archive");
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (NotBoundException e) {
+			e.printStackTrace();
+		}
+
 	}
 	
 	
@@ -79,6 +107,23 @@ public class DashboardController {
 	
 	public void openTimetable() {
 		new TrainLines().display(user.getLocationId());
+	}
+	
+	public void archiveReport() {
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Select PDF report");
+		fileChooser.getExtensionFilters().add(new ExtensionFilter("PDF document", "*.pdf"));
+		File selected = fileChooser.showOpenDialog(stage);
+		try {
+			byte[] data = Files.readAllBytes(selected.toPath());
+			String name = selected.getName();
+			archive.upload(data, name, user.getUsername());
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
+
+		
 	}
 	
 	private static HBox create(String username, String unreadCount) {
