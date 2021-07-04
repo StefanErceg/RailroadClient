@@ -17,6 +17,8 @@ public class Dashboard {
         stage.setTitle("Railroad");
         Scene scene = new Scene(loader.load());
         stage.setScene(scene);
+        stage.setMinWidth(900);
+        stage.setMinHeight(650);
         DashboardController controller = loader.getController();
         controller.initialize(stage, user);
         stage.show();
