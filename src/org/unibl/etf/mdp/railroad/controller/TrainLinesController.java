@@ -2,8 +2,10 @@ package org.unibl.etf.mdp.railroad.controller;
 
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import org.unibl.etf.mdp.railroad.Main;
 import org.unibl.etf.mdp.railroad.model.TrainLine;
 import org.unibl.etf.mdp.railroad.rest.TrainLines;
 
@@ -69,7 +71,7 @@ public class TrainLinesController {
 		Boolean passed = trainLine.getStops().stream().filter((stop) -> trainStationId.equals(stop.getTrainStation().getId())).findFirst().get().isPassed();
 		if (passed) markButton.setDisable(true);
 		} catch(NoSuchElementException e) {
-			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 		}
 		hbox.getChildren().add(markButton);
 		trainLine.getStops().stream().forEach((stop) -> hbox.getChildren().add

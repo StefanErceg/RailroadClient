@@ -6,10 +6,12 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.logging.Level;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.unibl.etf.mdp.railroad.Main;
 import org.unibl.etf.mdp.railroad.model.TrainLine;
 
 import com.google.gson.Gson;
@@ -30,7 +32,7 @@ public class TrainLines {
 			}
 			return trainLines;
 		} catch (JSONException | IOException e) {
-			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 			return null;
 		}
 	}
@@ -56,12 +58,12 @@ public class TrainLines {
 					return trainLine;
 				}
 				catch (Exception e) { 
-					e.printStackTrace();
+					Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 				}
 			}
 			
 		} catch(Exception e) {
-			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 		}
 		return null;
 	}

@@ -1,5 +1,8 @@
 package org.unibl.etf.mdp.railroad.view;
 
+import java.util.logging.Level;
+
+import org.unibl.etf.mdp.railroad.Main;
 import org.unibl.etf.mdp.railroad.controller.DashboardController;
 import org.unibl.etf.mdp.railroad.model.User;
 
@@ -24,6 +27,7 @@ public class Dashboard {
         stage.show();
 		} catch(Exception e) {
 			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 		}
 	}
 }

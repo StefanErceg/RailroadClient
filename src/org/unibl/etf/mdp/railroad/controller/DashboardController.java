@@ -2,12 +2,14 @@ package org.unibl.etf.mdp.railroad.controller;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.nio.file.Files;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -16,12 +18,17 @@ import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Properties;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
+import org.unibl.etf.mdp.railroad.Configuration;
+import org.unibl.etf.mdp.railroad.Main;
 import org.unibl.etf.mdp.railroad.archive.ArchiveInterface;
+import org.unibl.etf.mdp.railroad.chat.ChatUser;
 import org.unibl.etf.mdp.railroad.model.ChatMessage;
 import org.unibl.etf.mdp.railroad.model.TrainStation;
 import org.unibl.etf.mdp.railroad.model.User;
@@ -46,6 +53,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -58,24 +66,28 @@ import javafx.stage.Stage;
 
 public class DashboardController {
 	
-	private static final String ARCHIVE_DIRECTORY =  System.getProperty("user.home") + File.separator + "Railroad" + File.separator + "Archive";
-	private static final String CHAT_FILES_DIRECTORY = System.getProperty("user.home") + File.separator + "Railroad" + File.separator + "Chat";
+	private static String ARCHIVE_DIRECTORY;
+	private static String CHAT_FILES_DIRECTORY;
 	
-	private static final String CHAT_HOST = "127.0.0.1";
-	private static final int PORT = 8443;
-	private static final String KEYSTORE = System.getProperty("user.home") + File.separator + "Railroad" + File.separator + "SSL" + File.separator + "server_keystore.jks";
-	private static final String KEYSTORE_PASS = "railroadserver";
+	private static String CHAT_HOST;
+	private static int CHAT_PORT;
+	private static String KEYSTORE;
+	private static String KEYSTORE_PASS;
 	
+	private static Integer FILE_PORT;
 
-	public static final Integer INTRODUCTION = 1;
-	public static final Integer TEXT = 2;
-	public static final Integer FILE = 3;
-	public static final Integer BYE = 4;
+	private static final Integer INTRODUCTION = 1;
+	private static final Integer TEXT = 2;
+	private static final Integer FILE = 3;
+	private static final Integer BYE = 4;
+	private static final Integer USERS = 5;
+	private static final Integer ADD_USER = 6;
+	private static final Integer REMOVE_USER = 7;
 	
 	private Stage stage;
 	private User user;
-	private ArrayList<User> users;
 	private ArrayList<TrainStation> trainStations;
+	private static HashMap<String, ArrayList<ChatUser>> onlineUsers = null;
 	
 	private HashMap<String, ArrayList<ChatMessage>> chats;
 	private HashMap<String, Label> unreadCounts;
@@ -104,10 +116,22 @@ public class DashboardController {
 	private ArchiveInterface archive;
 	
 	public void initialize(Stage stage, User user) {
+		try {
+			Properties properties = Configuration.readParameters();
+			ARCHIVE_DIRECTORY = properties.getProperty("ARCHIVE_DIRECTORY");
+			CHAT_FILES_DIRECTORY = properties.getProperty("CHAT_FILES_DIRECTORY");
+			CHAT_HOST = properties.getProperty("CHAT_HOST");
+			CHAT_PORT = Integer.valueOf(properties.getProperty("CHAT_PORT"));
+			KEYSTORE = properties.getProperty("KEYSTORE");
+			KEYSTORE_PASS = properties.getProperty("KEYSTORE_PASS");
+			FILE_PORT = Integer.valueOf(properties.getProperty("FILE_PORT"));
+			
+		} catch(IOException e) {
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
+		}
 		this.stage = stage;
 		this.user = user;
 		this.stationID.setText(user.getLocationId());
-		this.users = new ArrayList<User>(ClientSOAP.getUsers().stream().filter((element) -> element.getUsername() != user.getUsername()).collect(Collectors.toList()));
 		this.trainStations = TrainStations.getTrainStations();
 		trainStationsComboBox.setOnAction(null);
 		trainStationsComboBox.getItems().addAll(trainStations);
@@ -116,12 +140,15 @@ public class DashboardController {
 			
 			@Override
 			public void handle(ActionEvent event) {
+				clearChat();
 				generateUsers();
+				selectedUser = "";
+				selectedUserLabel.setText("");
 				
 			}
 		});
 		unreadCounts = new HashMap<String, Label>();
-		generateUsers();
+
 		Notification.initialize(user.getUsername());
 		System.setProperty("java.security.policy", ARCHIVE_DIRECTORY + File.separator + "policy" + File.separator + "client_policyfile.txt");
 		if (System.getSecurityManager() == null) {
@@ -129,12 +156,12 @@ public class DashboardController {
 		}
 		Registry registry;
 		try {
-			registry = LocateRegistry.getRegistry(1099);
+			registry = LocateRegistry.getRegistry(FILE_PORT);
 			archive = (ArchiveInterface) registry.lookup("Archive");
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 		} catch (NotBoundException e) {
-			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 		}
 		
 		System.setProperty("javax.net.ssl.trustStore", KEYSTORE);
@@ -142,11 +169,15 @@ public class DashboardController {
 		
 		SSLSocketFactory socketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 		try {
-			socket = (SSLSocket) socketFactory.createSocket(CHAT_HOST, PORT);
+			socket = (SSLSocket) socketFactory.createSocket(CHAT_HOST, CHAT_PORT);
 			out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 			in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 			chats = new HashMap<String, ArrayList<ChatMessage>>();
-
+			messageTextField.setOnKeyReleased(event -> {
+				  if (event.getCode() == KeyCode.ENTER){
+					  sendMessage();
+					  }
+					});
 			stage.setOnCloseRequest(new EventHandler<javafx.stage.WindowEvent>() {
 				@Override
 				public void handle(javafx.stage.WindowEvent event) {
@@ -163,12 +194,33 @@ public class DashboardController {
 			out.write(stationIdBytes);
 			out.flush();
 			Thread chatListener = new Thread(new Runnable() {
+				@SuppressWarnings("unchecked")
 				@Override
 				public void run() {
 					Integer option = 0;
 					while (socketActive) {
 						try {
 							option = in.readInt();
+							if (option.equals(USERS)) {
+								Integer length = in.readInt();
+								byte[] usersBytes = new byte[length];
+								in.read(usersBytes);
+								onlineUsers = (HashMap<String, ArrayList<ChatUser>>) deserialize(usersBytes);
+								generateUsers();
+							} else if (option.equals(ADD_USER) || option.equals(REMOVE_USER)) {
+								Integer usernameLength = in.readInt();
+								byte[] usernameBuffer = new byte[usernameLength];
+								in.read(usernameBuffer, 0, usernameLength);
+								String username = new String(usernameBuffer);
+								Integer stationIdLength = in.readInt();
+								byte[] stationIdBuffer = new byte[stationIdLength];
+								in.read(stationIdBuffer, 0, stationIdLength);
+								String trainStationId = new String(stationIdBuffer);
+								if (option.equals(ADD_USER)) {
+									handleNewUser(username, trainStationId);
+								} else handleRemoveUser(username, trainStationId);
+							}
+							else {
 							Integer fromLength = in.readInt();
 							byte[] fromBuffer = new byte[fromLength];
 							in.read(fromBuffer, 0, fromLength);
@@ -182,7 +234,7 @@ public class DashboardController {
 								in.read(dataBuffer, 0, dataLength);
 								String data = new String(dataBuffer);
 								addMessage(TEXT, false, from, data, time);
-								if (from != selectedUser) {
+								if (!from.equals(selectedUser)) {
 									Label unreadCount = unreadCounts.get(from);
 									if (unreadCount != null) {
 										String text = unreadCount.getText();
@@ -223,7 +275,7 @@ public class DashboardController {
 								fileOut.flush();
 								fileOut.close();
 								addMessage(FILE, false, from, filename, time);
-								if (from != selectedUser) {
+								if (!from.equals(selectedUser)) {
 									Label unreadCount = unreadCounts.get(from);
 									if (unreadCount != null) {
 										String text = unreadCount.getText();
@@ -246,9 +298,13 @@ public class DashboardController {
 								}); 
 								}
 								
+							} 
 							}
 						} catch (IOException e) {
-							e.printStackTrace();
+							Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
+							socketActive = false;
+						} catch (ClassNotFoundException e) {
+							Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 						}
 					}
 				}
@@ -256,7 +312,7 @@ public class DashboardController {
 			chatListener.setDaemon(true);
 			chatListener.start();
 		} catch (IOException e) {
-			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 		}
 
 	}
@@ -273,7 +329,7 @@ public class DashboardController {
 	
 	public void sendMessage() {
 		String content = messageTextField.getText();
-		if ("".equals(content)) return;
+		if ("".equals(content) || "".equals(selectedUser)) return;
 		try {
 		out.writeInt(TEXT);
 		byte[] usernameBytes = user.getUsername().getBytes();
@@ -293,11 +349,12 @@ public class DashboardController {
 		addMessage(TEXT, true, selectedUser, content, time);
 	    renderMessage(true, content, time);
 		} catch (IOException e) {
-			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 		}
 	}
 	
 	public void sendFile() {
+		if ("".equals(selectedUser)) return;
 		File file = new FileChooser().showOpenDialog(stage);
 		if (file != null && file.isFile()) {
 			String filename = file.getName();
@@ -323,9 +380,9 @@ public class DashboardController {
 				addMessage(FILE, true, selectedUser, filename, time);
 			    renderFileSymbol(true, filename, time);
 			} catch (FileNotFoundException e) {
-				e.printStackTrace();
+				Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 			} catch (IOException e) {
-				e.printStackTrace();
+				Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 			}
 			
 		}
@@ -333,11 +390,17 @@ public class DashboardController {
 	
 	
 	public void generateUsers() {
-		usersWrap.getChildren().clear();
-		String trainStationId = trainStationsComboBox.getSelectionModel().getSelectedItem().getId();
-		if (trainStationId == null) return;
-		users.stream().filter((element) -> element.getLocationId().equals(trainStationId) && !element.getUsername().equals(user.getUsername()))
-		.forEach((element) -> usersWrap.getChildren().add(create(element.getUsername(), "")));
+		Platform.runLater(new Runnable() {
+			@Override
+			public void run() {
+				usersWrap.getChildren().clear();
+				String trainStationId = trainStationsComboBox.getSelectionModel().getSelectedItem().getId();
+				if (trainStationId == null || onlineUsers == null || !onlineUsers.containsKey(trainStationId)) return;
+				onlineUsers.get(trainStationId).stream().filter((element) -> element.getTrainStationId().equals(trainStationId) && !element.getUsername().equals(user.getUsername()))
+				.forEach((element) -> usersWrap.getChildren().add(create(element.getUsername(), "")));
+			}
+		});
+	
 	}
 	
 	public void logout() {
@@ -365,7 +428,7 @@ public class DashboardController {
 			archive.upload(data, name, user.getUsername());
 			new Alert().display("Report successfully archived!");
 		} catch (IOException e) {
-			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 			return;
 		}
 
@@ -387,7 +450,7 @@ public class DashboardController {
 			in.close();
 			socket.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 		}
 		
 	}
@@ -473,17 +536,72 @@ public class DashboardController {
 	  }
 	
 	private void updateChat() {
+		Platform.runLater(new Runnable() {
+			
+			@Override
+			public void run() {
+				clearChat();
+				ArrayList<ChatMessage> messages = chats.get(selectedUser);
+				if (messages != null) {
+					messages.forEach(message -> {
+						if (message.getType().equals(TEXT)) {
+							renderMessage(message.isSent(), message.getContent(), message.getTime());
+						} 
+						else if (message.getType().equals(FILE)) {
+							renderFileSymbol(message.isSent(), message.getContent(), message.getTime());
+						}
+					});
+				}
+				
+			}
+		});
+		
+	}
+	
+	private void clearChat() {
 		chat.getChildren().clear();
-		ArrayList<ChatMessage> messages = chats.get(selectedUser);
-		if (messages != null) {
-			messages.forEach(message -> {
-				if (message.getType().equals(TEXT)) {
-					renderMessage(message.isSent(), message.getContent(), message.getTime());
-				} 
-				else if (message.getType().equals(FILE)) {
-					renderFileSymbol(message.isSent(), message.getContent(), message.getTime());
+	}
+	
+	private void handleNewUser(String username, String trainStationId) {
+		if (!onlineUsers.containsKey(trainStationId)) {
+			onlineUsers.put(trainStationId, new ArrayList<ChatUser>());
+		}
+		onlineUsers.get(trainStationId).add(new ChatUser(username, trainStationId));
+		if (trainStationsComboBox.getSelectionModel().getSelectedItem().getId().equals(trainStationId)) {
+			Platform.runLater(new Runnable() {
+				
+				@Override
+				public void run() {
+					usersWrap.getChildren().add(create(username, ""));
 				}
 			});
+			
 		}
+	}
+	
+	private void handleRemoveUser(String username, String trainStationId) {
+		if (!onlineUsers.containsKey(trainStationId)) return;
+		ArrayList<ChatUser> allUsers =  onlineUsers.get(trainStationId);
+		onlineUsers.replace(trainStationId,(ArrayList<ChatUser>) allUsers.stream().filter(user -> !user.getUsername().equals(username)).collect(Collectors.toList()));
+		if (trainStationsComboBox.getSelectionModel().getSelectedItem().getId().equals(trainStationId)) {
+			generateUsers();
+		}
+		if (selectedUser.equals(username)) {
+			Platform.runLater(new Runnable() {
+				
+				@Override
+				public void run() {
+					clearChat();
+					
+				}
+			});
+			
+		}
+	}
+	
+	private static Object deserialize(byte[] data) throws IOException, ClassNotFoundException {
+	    ByteArrayInputStream in = new ByteArrayInputStream(data);
+	    ObjectInputStream is = new ObjectInputStream(in);
+	    return is.readObject();
 	}
 }

@@ -1,5 +1,8 @@
 package org.unibl.etf.mdp.railroad.view;
 
+import java.util.logging.Level;
+
+import org.unibl.etf.mdp.railroad.Main;
 import org.unibl.etf.mdp.railroad.controller.SendNotificationController;
 import org.unibl.etf.mdp.railroad.model.User;
 
@@ -25,7 +28,7 @@ public class SendNotification {
 	        controller.initialize(stage, user);
 	        stage.showAndWait();
 	    	} catch(Exception e) {
-	    		e.printStackTrace();
+	    		Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 	    	}
 	    }
 	}

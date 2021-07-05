@@ -4,16 +4,20 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.Properties;
+import java.util.logging.Level;
 
+import org.unibl.etf.mdp.railroad.Configuration;
+import org.unibl.etf.mdp.railroad.Main;
 import org.unibl.etf.mdp.railroad.view.Alert;
 
 import javafx.application.Platform;
 
 public class Notification {
 	
-	private static final int PORT = 20000;
-	private static final String HOST = "224.0.0.11";
-	public static final String DELIMITER = "###";
+	private static int MULTICAST_PORT;
+	private static String MULTICAST_HOST;
+	public static String MULTICAST_DELIMITER;
 	
 	private static MulticastSocket socket = null;
 	private static boolean active = false;
@@ -22,14 +26,19 @@ public class Notification {
 	
 	public static void initialize(String user) {
 		try {
-		socket = new MulticastSocket(PORT);
-        address = InetAddress.getByName(HOST);
-        socket.joinGroup(address);
-        active = true;
-        username = user;
-        listen();
+			Properties properties = Configuration.readParameters();
+			MULTICAST_PORT = Integer.valueOf(properties.getProperty("MULTICAST_PORT"));
+			MULTICAST_HOST = properties.getProperty("MULTICAST_HOST");
+			MULTICAST_DELIMITER = properties.getProperty("MULTICAST_DELIMITER");
+			
+			socket = new MulticastSocket(MULTICAST_PORT);
+	        address = InetAddress.getByName(MULTICAST_HOST);
+	        socket.joinGroup(address);
+	        active = true;
+	        username = user;
+	        listen();
 		} catch(Exception e) {
-			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 		}
 	}
 	
@@ -44,10 +53,10 @@ public class Notification {
 	                try {
 						socket.receive(packet);
 					} catch (IOException e) {
-						e.printStackTrace();
+						Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 					}
 	                String received = new String(packet.getData(), 0, packet.getLength());
-	                String[] parsed = received.split(DELIMITER);
+	                String[] parsed = received.split(MULTICAST_DELIMITER);
 	                if (username == null || username.equals(parsed[0])) return;
 	                Platform.runLater(new Runnable() {
 						@Override
@@ -65,13 +74,13 @@ public class Notification {
 	
 	public static void send(String user, String message) {
 		byte[] buffer = new byte[1024];
-		String content = user + DELIMITER + message;
+		String content = user + MULTICAST_DELIMITER + message;
 		buffer = content.getBytes();
-		DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, PORT);
+		DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, MULTICAST_PORT);
 		try {
 			socket.send(packet);
 		} catch (IOException e) {
-			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 		}
 	}
 	

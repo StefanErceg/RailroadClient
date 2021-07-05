@@ -1,5 +1,8 @@
 package org.unibl.etf.mdp.railroad.view;
 
+import java.util.logging.Level;
+
+import org.unibl.etf.mdp.railroad.Main;
 import org.unibl.etf.mdp.railroad.controller.LoginController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -21,7 +24,7 @@ import javafx.stage.Stage;
 	        controller.initialize(stage);
 	        stage.show();
 	    	} catch(Exception e) {
-	    		e.printStackTrace();
+	    		Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 	    	}
 	    }
 

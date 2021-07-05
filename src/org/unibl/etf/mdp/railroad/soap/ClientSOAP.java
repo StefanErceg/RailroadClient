@@ -3,9 +3,11 @@ package org.unibl.etf.mdp.railroad.soap;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.logging.Level;
 
 import javax.xml.rpc.ServiceException;
 
+import org.unibl.etf.mdp.railroad.Main;
 import org.unibl.etf.mdp.railroad.model.User;
 
 public class ClientSOAP {
@@ -16,7 +18,7 @@ public class ClientSOAP {
 			Auth auth = locator.getAuth();
 			return auth.login(username, password);
 		} catch (ServiceException | RemoteException e) {
-			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 			return null;
 		}
 	}
@@ -27,7 +29,7 @@ public class ClientSOAP {
 			org.unibl.etf.mdp.railroad.soap.User user = locator.getUser();
 			return new ArrayList<>(Arrays.asList(user.getUsers()));
 		} catch(Exception e) {
-			e.printStackTrace();
+			Main.errorLog.getLogger().log(Level.SEVERE, e.fillInStackTrace().toString());
 			return null;
 		}
 	}
